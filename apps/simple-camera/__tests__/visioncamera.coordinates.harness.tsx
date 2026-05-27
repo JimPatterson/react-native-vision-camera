@@ -462,7 +462,15 @@ describe('VisionCamera - Coordinates', () => {
     const runtime = workletsProvider.createRuntimeForThread(frameOutput.thread)
     runtime.setOnFrameCallback(frameOutput, (frame) => {
       'worklet'
-      const center = { x: frame.width / 2, y: frame.height / 2 }
+      const w = frame.width
+      const h = frame.height
+      const isRotated =
+        frame.orientation === 'left' || frame.orientation === 'right'
+      // Use oriented-space center: for rotated frames the width/height axes swap
+      const center = {
+        x: isRotated ? h / 2 : w / 2,
+        y: isRotated ? w / 2 : h / 2,
+      }
       const cameraPoint = frame.convertFramePointToCameraPoint(center)
       scheduleOnRN(onSample, cameraPoint)
       frame.dispose()
@@ -581,11 +589,16 @@ describe('VisionCamera - Coordinates', () => {
       'worklet'
       // A square centered in the frame, kept small so it stays inside the
       // preview's `resizeMode='cover'` crop on any view aspect ratio.
-      const side = Math.min(frame.width, frame.height) / 4
-      const left = frame.width / 2 - side / 2
-      const right = frame.width / 2 + side / 2
-      const top = frame.height / 2 - side / 2
-      const bottom = frame.height / 2 + side / 2
+      // Points are in oriented space: for rotated frames the axes swap.
+      const isRotated =
+        frame.orientation === 'left' || frame.orientation === 'right'
+      const orientedWidth = isRotated ? frame.height : frame.width
+      const orientedHeight = isRotated ? frame.width : frame.height
+      const side = Math.min(orientedWidth, orientedHeight) / 4
+      const left = orientedWidth / 2 - side / 2
+      const right = orientedWidth / 2 + side / 2
+      const top = orientedHeight / 2 - side / 2
+      const bottom = orientedHeight / 2 + side / 2
       scheduleOnRN(onCorners, {
         topLeft: frame.convertFramePointToCameraPoint({ x: left, y: top }),
         topRight: frame.convertFramePointToCameraPoint({ x: right, y: top }),
@@ -640,10 +653,10 @@ describe('VisionCamera - Coordinates', () => {
     }
   })
 
-  // Analyzer coordinates may be reported in the Frame's intended/oriented
-  // image space, while Frame.convertFramePointToCameraPoint consumes raw
-  // buffer-space points. The center-only test above cannot catch an
-  // off-center rectangle drifting after orientation is applied.
+  // Analyzer coordinates are in the Frame's intended/oriented image space.
+  // Frame.convertFramePointToCameraPoint must account for the frame
+  // orientation; the center-only test above cannot catch an off-center
+  // rectangle drifting after orientation is applied.
   // See https://github.com/margelo/react-native-vision-camera/pull/3878.
   it('maps oriented Frame rectangles into the same Camera bounds', async (context) => {
     const session = await VisionCamera.createCameraSession(false)
@@ -664,16 +677,10 @@ describe('VisionCamera - Coordinates', () => {
       },
     ])
 
-    type Bounds = {
-      left: number
-      top: number
-      right: number
-      bottom: number
-    }
     type ProjectionReport = {
       orientation: string
-      expected: Bounds
-      reported: Bounds
+      orientedCorners: Point[]
+      recoveredCorners: Point[]
     }
     let report: ProjectionReport | undefined
     const onReport = (r: ProjectionReport) => {
@@ -706,38 +713,20 @@ describe('VisionCamera - Coordinates', () => {
         { x: box.left, y: box.bottom },
       ]
 
-      const orientedPointToFramePoint = (point: Point): Point => {
-        switch (frame.orientation) {
-          case 'right':
-            return { x: w - point.y, y: point.x }
-          case 'left':
-            return { x: point.y, y: h - point.x }
-          case 'down':
-            return { x: w - point.x, y: h - point.y }
-          default:
-            return point
-        }
-      }
-      const getCameraBounds = (points: Point[]): Bounds => {
-        const cameraPoints = points.map((point) =>
-          frame.convertFramePointToCameraPoint(point),
-        )
-        const xs = cameraPoints.map((point) => point.x)
-        const ys = cameraPoints.map((point) => point.y)
-        return {
-          left: Math.min(...xs),
-          top: Math.min(...ys),
-          right: Math.max(...xs),
-          bottom: Math.max(...ys),
-        }
-      }
+      // Verify round-trip: oriented → camera → oriented should be identity.
+      // This catches the bug where orientation is ignored and the conversion
+      // drifts for off-center points.
+      const cameraCorners = orientedCorners.map((c) =>
+        frame.convertFramePointToCameraPoint(c),
+      )
+      const recoveredCorners = cameraCorners.map((c) =>
+        frame.convertCameraPointToFramePoint(c),
+      )
 
       scheduleOnRN(onReport, {
         orientation: frame.orientation,
-        expected: getCameraBounds(
-          orientedCorners.map(orientedPointToFramePoint),
-        ),
-        reported: getCameraBounds(orientedCorners),
+        orientedCorners: orientedCorners,
+        recoveredCorners: recoveredCorners,
       })
       frame.dispose()
     })
@@ -757,8 +746,17 @@ describe('VisionCamera - Coordinates', () => {
         )
       }
 
-      for (const edge of ['left', 'top', 'right', 'bottom'] as const) {
-        expect(r.reported[edge]).toBeCloseTo(r.expected[edge], 0)
+      // Each oriented corner, after converting to camera and back, must
+      // round-trip to within 1 pixel.  If orientation is ignored the
+      // off-center points drift by (roughly) half a frame dimension.
+      for (let i = 0; i < r.orientedCorners.length; i++) {
+        const original = r.orientedCorners[i]
+        const recovered = r.recoveredCorners[i]
+        if (original == null || recovered == null) {
+          throw new Error(`missing corner ${i}`)
+        }
+        expect(recovered.x).toBeCloseTo(original.x, 0)
+        expect(recovered.y).toBeCloseTo(original.y, 0)
       }
     } finally {
       runtime.setOnFrameCallback(frameOutput, undefined)
