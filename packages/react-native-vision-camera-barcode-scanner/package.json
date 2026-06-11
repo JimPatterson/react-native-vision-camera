@@ -71,7 +71,7 @@
     "react-native": "0.85.3",
     "react-native-nitro-image": "0.15.2",
     "react-native-nitro-modules": "0.37.0",
-    "react-native-vision-camera": "*",
+    "@jimpatterson/react-native-vision-camera": "*",
     "typescript": "6.0.3"
   },
   "peerDependencies": {
@@ -79,7 +79,7 @@
     "react-native": "*",
     "react-native-nitro-image": "*",
     "react-native-nitro-modules": "*",
-    "react-native-vision-camera": "*"
+    "@jimpatterson/react-native-vision-camera": "*"
   },
   "peerDependenciesMeta": {
     "react-native-nitro-modules": {
