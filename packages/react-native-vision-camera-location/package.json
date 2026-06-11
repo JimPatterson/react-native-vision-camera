@@ -1,6 +1,6 @@
 {
   "name": "@jimpatterson/react-native-vision-camera-location",
-  "version": "5.0.11-bc-fix1",
+  "version": "5.0.11-bc-fix.2",
   "description": "Location tagging plugin for react-native-vision-camera for photo EXIF and video metadata.",
   "main": "lib/index",
   "module": "lib/index",
@@ -69,14 +69,14 @@
     "react": "19.2.3",
     "react-native": "0.84.0",
     "react-native-nitro-modules": "0.35.9",
-    "react-native-vision-camera": "*",
+    "@jimpatterson/react-native-vision-camera": "*",
     "typescript": "5.9.3"
   },
   "peerDependencies": {
     "react": "*",
     "react-native": "*",
     "react-native-nitro-modules": "*",
-    "react-native-vision-camera": "*"
+    "@jimpatterson/react-native-vision-camera": "*"
   },
   "release-it": {
     "npm": {
