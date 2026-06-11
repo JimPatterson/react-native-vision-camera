@@ -1,6 +1,6 @@
 {
-  "name": "react-native-vision-camera-barcode-scanner",
-  "version": "5.0.11",
+  "name": "@jimpatterson/react-native-vision-camera-barcode-scanner",
+  "version": "5.0.11-bc-fix1",
   "description": "Barcode scanning plugin for react-native-vision-camera powered by ML Kit.",
   "main": "lib/index",
   "module": "lib/index",
@@ -53,7 +53,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mrousavy/react-native-vision-camera.git"
+    "url": "git+https://github.com/jimpatterson/react-native-vision-camera.git"
   },
   "author": "Marc Rousavy <me@mrousavy.com> (https://github.com/mrousavy)",
   "license": "MIT",
@@ -62,7 +62,7 @@
   },
   "homepage": "https://visioncamera.margelo.com/api/react-native-vision-camera-barcode-scanner",
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://npm.pkg.github.com"
   },
   "devDependencies": {
     "@types/react": "19.2.14",

@@ -1,6 +1,6 @@
 {
-  "name": "react-native-vision-camera-skia",
-  "version": "5.0.11",
+  "name": "@jimpatterson/react-native-vision-camera-skia",
+  "version": "5.0.11-bc-fix1",
   "description": "Skia rendering plugin for react-native-vision-camera for drawing camera frames in React Native.",
   "main": "lib/index",
   "module": "lib/index",
@@ -40,7 +40,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mrousavy/react-native-vision-camera.git"
+    "url": "git+https://github.com/jimpatterson/react-native-vision-camera.git"
   },
   "author": "Marc Rousavy <me@mrousavy.com> (https://github.com/mrousavy)",
   "license": "MIT",
@@ -49,7 +49,7 @@
   },
   "homepage": "https://visioncamera.margelo.com/api/react-native-vision-camera-skia",
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://npm.pkg.github.com"
   },
   "devDependencies": {
     "@shopify/react-native-skia": "2.4.21",
